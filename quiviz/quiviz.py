@@ -1,6 +1,8 @@
 import wrapt
 import logging
 
+
+
 _quiviz_naming_func = lambda f,k :f"{k}"
 _quiviz_logging_func = lambda m,v:f"{m}\t{v[-1]}"
 
@@ -63,6 +65,9 @@ class LoggingObs():
                 self.history[m] = v[-1]
                 logging.info(_quiviz_logging_func(m,v))
                 print(_quiviz_logging_func(m,v))
+    
+    def log_msg(msg):
+        logging.info(msg)
 
 
 
