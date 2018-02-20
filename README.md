@@ -2,7 +2,6 @@
 
 Quiviz is a cheap logger for your machine learning experiments.
 
---------------------------------------
 ## Concept:
 **Quiviz** provides a decorator to autolog your experiments. at import, it injects an observable **state** dict into your script which is automatically populated from your logged output function. Values are aggregated by keys. Moreover, it autoconfigures a python logger to track those metrics.
 
