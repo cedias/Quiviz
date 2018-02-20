@@ -8,11 +8,9 @@ class LinePlotObs():
             => plots on window titled "mse" under the name "train"
     """
     def __init__(self):
-        import visdom
-        import torch
+        self.visdom = __import__('visdom')
 
-
-        self.viz = visdom.Visdom()
+        self.viz = self.visdom.Visdom()
         self.plots = {}
         self.__name__= 'LinePlotObs'
         self.split_chr = '_'
@@ -51,6 +49,8 @@ class LinePlot():
     """
 
     def __init__(self,viz,name="plot",opt_dict={}):
+        self.visdom = __import__('visdom')
+        self.torch = __import__('torch')
         self.viz = viz
         self.name = name
         self.win = None
@@ -67,7 +67,7 @@ class LinePlot():
         """
         def to_tensor(var):
             if type(var) in [int, float, list]:
-                return torch.Tensor([var])
+                return self.torch.Tensor([var])
             else:
                 return var
 
