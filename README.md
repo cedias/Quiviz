@@ -12,6 +12,18 @@ At import:
 
 To automatically populate this **experiment state**, the function returning the metrics you wish to track should simply return a `dict()` and be decorated with `@quiviz.log`. Values are aggregated by keys, ordered by insertion. 
 
+By default the logger creates a folder in your working directory to log experiments. You can create a `~/.quiviz_rc` config file and add `{"log_base_path":"~/my_xp_folder"}` to select a custom directory.
+
+
+## Install:
+- Clone & install with: `pip install -e .`
+
+## Usage (see exemple.py):
+
+1. `import quiviz`
+2. Decorate logged function with `@quiviz.log`
+3. Run
+
 
 ```python
 @quiviz.log
@@ -24,16 +36,6 @@ for x in range(100):
     
 # -> quiviz will log {"accuracy": [0,...,99]} into injected state dict quiviz.quiviz._quiviz_shared_state
 ```
-
-
-## Install:
-- Clone & install with: `pip install -e .`
-
-## Usage (see exemple.py):
-
-1. `import quiviz`
-2. Decorate logged function with `@quiviz.log`
-3. Run
 
 
 
