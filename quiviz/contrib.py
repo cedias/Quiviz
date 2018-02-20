@@ -1,6 +1,3 @@
-import visdom
-import torch
-
 
 class LinePlotObs():
     """
@@ -11,6 +8,10 @@ class LinePlotObs():
             => plots on window titled "mse" under the name "train"
     """
     def __init__(self):
+        import visdom
+        import torch
+
+
         self.viz = visdom.Visdom()
         self.plots = {}
         self.__name__= 'LinePlotObs'
@@ -18,7 +19,7 @@ class LinePlotObs():
         self.line_epochs = {}
         
 
-    def __call__(self,d):
+    def __call__(self,d,func_ret):
         for plot_name, v in self.group_plots(d).items():
 
             plt = self.plots.setdefault(plot_name,LinePlot(self.viz,f"{d.xp_name}: {plot_name}"))
