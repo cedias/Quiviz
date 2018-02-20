@@ -2,9 +2,10 @@ import wrapt
 import logging
 
 
+### Core
 
 _quiviz_naming_func = lambda f,k :f"{k}"
-_quiviz_logging_func = lambda m,v:f"{m}\t{v[-1]}"
+_quiviz_logging_func = lambda m,v:f"{m}\t{v}"
 
 
 class Observable_Dict(dict):
@@ -18,19 +19,12 @@ class Observable_Dict(dict):
     def register(self,callable):
         self.observers[callable.__name__] = callable
 
-    def notify_obs(self):
+    def notify_obs(self,func_ret):
         for obs in self.observers.values():
-            obs(self)
+            obs(self,func_ret)
 
 _quiviz_shared_state = Observable_Dict()
 
-
-
-def register(callable):
-    _quiviz_shared_state.register(callable)
-
-def name_xp(name):
-    _quiviz_shared_state.xp_name = name
 
 @wrapt.decorator
 def log(wrapped, instance, args, kwargs):   
@@ -44,7 +38,7 @@ def log(wrapped, instance, args, kwargs):
         d_key = _quiviz_naming_func(wrapped,k)
         _quiviz_shared_state.setdefault(d_key,[]).append(v)
     
-    _quiviz_shared_state.notify_obs()
+    _quiviz_shared_state.notify_obs(func_ret)
 
     return func_ret
 
@@ -56,18 +50,32 @@ class LoggingObs():
 
     def __init__(self):
         self.__name__= 'PythonLogger'
-        self.split_chr = '_'
-        self.history = {}
     
-    def __call__(self,d):
-        for m , v in d.items():
-            if not self.history.get(m,None) == v[-1]: #logs when change
-                self.history[m] = v[-1]
-                logging.info(_quiviz_logging_func(m,v))
-                print(_quiviz_logging_func(m,v))
-    
-    def log_msg(msg):
-        logging.info(msg)
+    def __call__(self,d,func_ret):
+        for m , v in func_ret.items():
+            logging.info(_quiviz_logging_func(m,v))
+
+
+
+### Helpers
+
+def register(callable):
+    """
+    Registers a new observers to shared_dict
+    """
+    _quiviz_shared_state.register(callable)
+
+def reset():
+    """
+    Resets shared state
+    """
+    _quiviz_shared_state.clear()
+
+def name_xp(name):
+    """
+    Sets the experience name
+    """
+    _quiviz_shared_state.xp_name = name
 
 
 
