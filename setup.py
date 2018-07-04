@@ -8,4 +8,5 @@ setup(name='quiviz',
       author_email='me@mymail.com',
       license='MIT',
       packages=['quiviz'],
+      install_requires=["wrapt", "visdom"],
       zip_safe=False)
