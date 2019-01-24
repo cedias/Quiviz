@@ -9,6 +9,11 @@ _quiviz_logging_func = lambda m,v:f"{m}\t{v}"
 
 
 class Observable_Dict(dict):
+    """
+    Observable dictionnary: notifies registered observers when updated.
+    updates by calling them directly.
+    """
+
 
     def __init__(self):
         super(Observable_Dict,self).__init__()
@@ -27,7 +32,15 @@ _quiviz_shared_state = Observable_Dict()
 
 
 @wrapt.decorator
-def log(wrapped, instance, args, kwargs):   
+def log(wrapped, instance, args, kwargs):  
+    """
+    Gets logged function return:
+    -> should return dict
+    
+    If type is list: append values
+    else: save value
+
+    """
 
     func_ret = wrapped(*args, **kwargs)
 
@@ -36,8 +49,12 @@ def log(wrapped, instance, args, kwargs):
 
     for k,v in func_ret.items():
         d_key = _quiviz_naming_func(wrapped,k)
-        _quiviz_shared_state.setdefault(d_key,[]).append(v)
-    
+        
+        if type(v) is list:
+            _quiviz_shared_state.setdefault(d_key,[]).extend(v)
+        else:
+            _quiviz_shared_state.setdefault(d_key,v)
+
     _quiviz_shared_state.notify_obs(func_ret)
 
     return func_ret
@@ -71,11 +88,10 @@ def reset():
     """
     _quiviz_shared_state.clear()
 
-def name_xp(name):
+def set_xp_name(name):
     """
     Sets the experience name
     """
     _quiviz_shared_state.xp_name = name
-
 
 

@@ -1,4 +1,3 @@
-
 class LinePlotObs():
     """
     Visdom Observer which groups by metrics and uses function as line legend.
@@ -7,28 +6,26 @@ class LinePlotObs():
         -> line name is first (train)
             => plots on window titled "mse" under the name "train"
     """
-    def __init__(self):
+    def __init__(self,env="main",visdom=None,set_metrics=set()):
         self.visdom = __import__('visdom')
-
-        self.viz = self.visdom.Visdom()
+        
+        if visdom is None:
+            self.viz = self.visdom.Visdom(env=env)
+        
         self.plots = {}
+        self.set_metrics = set_metrics
         self.__name__= 'LinePlotObs'
         self.split_chr = '_'
-        self.line_epochs = {}
         
 
     def __call__(self,d,func_ret):
+
         for plot_name, v in self.group_plots(d).items():
+                plt = self.plots.setdefault(plot_name,LinePlot(self.viz,f"{plot_name}"))
 
-            plt = self.plots.setdefault(plot_name,LinePlot(self.viz,f"{d.xp_name}: {plot_name}"))
-
-            for line,values in v:
-                p_key = plot_name+line
-
-                if len(values)-1 > self.line_epochs.get(p_key,-1):
-                    plt(len(values)-1,values[-1],line)
-                    self.line_epochs[p_key] = len(values)-1
-
+                for line,values in v:
+                    plt(line,values)
+                    
 
     def group_plots(self,d):
         """
@@ -36,16 +33,22 @@ class LinePlotObs():
         """
         metrics = {}
         for k,v in d.items():
-            sk = k.split(self.split_chr)
-            metric = sk[-1]
-            plt_key = " ".join(sk[:-1])
-            metrics.setdefault(metric,[]).append((plt_key,v))
+            if type(v) is list: #only care for lists of values
+                sk = k.split(self.split_chr)
+
+                # train_mse => ["train","mse"]
+                metric = sk[-1]
+                plt_key = " ".join(sk[:-1])
+
+                if (metric in self.set_metrics or len(self.set_metrics) == 0):
+                    metrics.setdefault(metric,[]).append((plt_key,v))
         return metrics
         
 
 class LinePlot():
     """
     Helper to plot lines in torch with Visdom
+    Callable("plot_name",[value1,value2])
     """
 
     def __init__(self,viz,name="plot",opt_dict={}):
@@ -57,13 +60,12 @@ class LinePlot():
         self.opt_dict = opt_dict
         self.opt_dict["title"] = self.name
 
-    def _checks(self,x,y):
+    def _checks(self,values):
         
         """
         Performs transformations
         a) Changes to Tensor if int/float/array.
-        b) Assert Tensors have two dimensions (1,X)
-        c) expand x.size(-1) to y.size(-1) if x.size(-1) = 1
+        b) returns indexes
         """
         def to_tensor(var):
             if type(var) in [int, float, list]:
@@ -71,26 +73,20 @@ class LinePlot():
             else:
                 return var
 
-        x,y = to_tensor(x),to_tensor(y) # a)
-        
-
-        if x.size(-1) == 1 and y.size(-1) != x.size(-1): # c)
-            x = x.expand_as(y)
+        y = to_tensor(values) # a)
+        x = to_tensor(list(range(len(values))))
 
         return x,y
 
-    def update(self,x,y,name="line"):
-        x,y = self._checks(x,y)
+    def update(self,name,x):
+        
+        x,y = self._checks(x)
 
         if self.win is None:
-            self.win = self.viz.line(X=x, Y=y,opts=self.opt_dict) # TODO: Find a way to remove placeholder...
-            self.viz.line(X=x, Y=y, win=self.win,name=name, update='append',opts=self.opt_dict)
-            
-
+            self.win = self.viz.line( Y=y,name=name,opts=self.opt_dict)
         else:
-            self.viz.line(X=x, Y=y, win=self.win,name=name, update='append',opts=self.opt_dict)
+            self.viz.line( Y=y[-1],X=x[-1], win=self.win,name=name, update='replace',opts=self.opt_dict)
 
-    def __call__(self,x,y,name):
-        self.update(x,y,name)
-
-
+    def __call__(self,name,values):
+       
+        self.update(name,values)

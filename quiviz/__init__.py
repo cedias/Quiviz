@@ -33,5 +33,7 @@ logging.basicConfig(format='%(asctime)s - %(message)s',
 
 
 logging.info(f"\n\n$ {'_'.join(sys.argv)}\n--> new run:\n\n")
+
 ## Auto import LoggingObs
 register(LoggingObs())
+set_xp_name(sys.argv)
